@@ -191,12 +191,12 @@
         [UPTEthSigner signJwt:referenceAddress
                    userPrompt:@"test signing data"
                          data:payload
-                       result:^(NSData *signature, NSError *error)
+                       result:^(NSDictionary *signature, NSError *error)
         {
             XCTAssertNil(error);
-            NSString *base64Signature = [signature base64EncodedStringWithOptions:0];
-            NSString *webSafeBase64Signature = [UPTEthSigner URLEncodedBase64StringWithBase64String:base64Signature];
-            XCTAssertTrue([webSafeBase64Signature isEqualToString:example[@"signature"]]);
+            XCTAssertTrue([signature[@"r"] isEqualToString:example[@"r"]]);
+            XCTAssertTrue([signature[@"s"] isEqualToString:example[@"s"]]);
+            XCTAssertEqual([signature[@"v"] intValue], [example[@"v"] intValue]);
         }];
     }
 }
@@ -252,12 +252,12 @@
                         [UPTEthSigner signJwt:kp[@"address"]
                                    userPrompt:@"test signing data"
                                          data:jwtData
-                                       result:^(NSData *signature, NSError *error)
+                                       result:^(NSDictionary *signature, NSError *error)
                         {
                             XCTAssertNil(error);
-                            NSString *base64Signature = [signature base64EncodedStringWithOptions:0];
-                            NSString *webSafeBase64Signature = [UPTEthSigner URLEncodedBase64StringWithBase64String:base64Signature];
-                            XCTAssertTrue([webSafeBase64Signature isEqualToString:kp[@"jwtsig"]]);
+                            XCTAssertTrue([signature[@"r"] isEqualToString:kp[@"jwtsig"][@"r"]]);
+                            XCTAssertTrue([signature[@"s"] isEqualToString:kp[@"jwtsig"][@"s"]]);
+                            XCTAssertEqual([signature[@"v"] intValue], [kp[@"jwtsig"][@"v"] intValue]);
                         }];
                     }
                 }];

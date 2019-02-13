@@ -67,7 +67,7 @@ NSString * const UPTHDSignerErrorCodeLevelSigningError = @"-14";
     }
 
     NSData *masterEntropy = [UPTHDSigner entropyWithEthAddress:rootAddress userPromptText:prompt protectionLevel:protectionLevel];
-    if (!masterEntropy)
+    if (masterEntropy == nil)
     {
         NSError *protectionLevelError = [[NSError alloc] initWithDomain:@"UPTHDError"
                                                                    code:UPTHDSignerErrorCodeLevelPrivateKeyNotFound.integerValue
@@ -152,7 +152,7 @@ rootDerivationPath:(NSString *)derivationPath
     BTCMnemonic *mnemonic = [[BTCMnemonic alloc] initWithWords:words
                                                       password:@""
                                                   wordListType:BTCMnemonicWordListTypeEnglish];
-    if (!mnemonic)
+    if (mnemonic == nil)
     {
         callback(nil, nil, [[NSError alloc] initWithDomain:kUPTHDSignerErrorDomain
                                                       code:UPTHDSignerErrorCodeInvalidSeedWords.integerValue
@@ -195,7 +195,7 @@ rootDerivationPath:(NSString *)derivationPath
     NSData *masterEntropy = [UPTHDSigner entropyWithEthAddress:rootAddress
                                                 userPromptText:prompt
                                                protectionLevel:protectionLevel];
-    if (!masterEntropy)
+    if (masterEntropy == nil)
     {
         NSError *protectionLevelError = [[NSError alloc] initWithDomain:@"UPTError"
                                                                    code:UPTHDSignerErrorCodeLevelPrivateKeyNotFound.integerValue
@@ -251,7 +251,7 @@ rootDerivationPath:(NSString *)derivationPath
     }
 
     NSData *masterEntropy = [UPTHDSigner entropyWithEthAddress:rootAddress userPromptText:prompt protectionLevel:protectionLevel];
-    if (!masterEntropy)
+    if (masterEntropy == nil)
     {
         NSError *protectionLevelError = [[NSError alloc] initWithDomain:@"UPTError"
                                                                    code:UPTHDSignerErrorCodeLevelPrivateKeyNotFound.integerValue
@@ -269,7 +269,7 @@ rootDerivationPath:(NSString *)derivationPath
 
     NSData *hash = [UPTHDSigner keccak256:payloadData];
     NSDictionary *signature = ethereumSignature(derivedKeychain.key, hash, chainId);
-    if (signature)
+    if (signature != nil)
     {
         callback(signature, nil);
     }
@@ -302,7 +302,7 @@ rootDerivationPath:(NSString *)derivationPath
     NSData *masterEntropy = [UPTHDSigner entropyWithEthAddress:rootAddress
                                                 userPromptText:prompt
                                                protectionLevel:protectionLevel];
-    if (!masterEntropy)
+    if (masterEntropy == nil)
     {
         NSError *protectionLevelError = [[NSError alloc] initWithDomain:@"UPTError"
                                                                    code:UPTHDSignerErrorCodeLevelPrivateKeyNotFound.integerValue
@@ -320,18 +320,18 @@ rootDerivationPath:(NSString *)derivationPath
 
     NSData *payloadData = [[NSData alloc] initWithBase64EncodedString:data options:0];
     NSData *hash = [payloadData SHA256];
-    NSData *signature = simpleSignature(derivedKeychain.key, hash);
-    if (signature)
+    NSDictionary *signature = ethereumSignature(derivedKeychain.key, hash, NULL);
+    if (signature != nil)
     {
-        NSString *base64EncodedSignature = [signature base64EncodedStringWithOptions:0];
-        NSString *webSafeBase64Signature = [UPTHDSigner URLEncodedBase64StringWithBase64String:base64EncodedSignature];
-        callback(webSafeBase64Signature, nil);
+        callback(@{ @"r" : signature[@"r"], @"s" : signature[@"s"], @"v" : @([signature[@"v"] intValue] - 27) }, nil);
     }
     else
     {
+        NSDictionary *userInfo = @{ @"message": [NSString stringWithFormat:@"signing failed due to invalid signature components for eth address: signTransaction %@",
+                                                 rootAddress] };
         NSError *signingError = [[NSError alloc] initWithDomain:@"UPTError"
                                                            code:UPTHDSignerErrorCodeLevelSigningError.integerValue
-                                                       userInfo:@{@"message": [NSString stringWithFormat:@"signing failed due to invalid signature components for eth address: signTransaction %@", rootAddress]}];
+                                                       userInfo:userInfo];
         callback(nil, signingError);
     }
 }
@@ -355,7 +355,7 @@ rootDerivationPath:(NSString *)derivationPath
     NSData *masterEntropy = [UPTHDSigner entropyWithEthAddress:rootAddress
                                                 userPromptText:prompt
                                                protectionLevel:protectionLevel];
-    if (!masterEntropy)
+    if (masterEntropy == nil)
     {
         NSError *protectionLevelError = [[NSError alloc] initWithDomain:@"UPTError"
                                                                    code:UPTHDSignerErrorCodeLevelPrivateKeyNotFound.integerValue
@@ -399,7 +399,7 @@ rootDerivationPath:(NSString *)derivationPath
     NSString *protectionLevelLookupKeyName = [UPTHDSigner protectionLevelLookupKeyNameWithEthAddress:ethAddress];
     VALValet *protectionLevelsKeystore = [UPTHDSigner keystoreForProtectionLevels];
     NSString *keychainSourcedProtectionLevel = [protectionLevelsKeystore stringForKey:protectionLevelLookupKeyName];
-    if (!keychainSourcedProtectionLevel)
+    if (keychainSourcedProtectionLevel == nil)
     {
         return UPTHDSignerProtectionLevelNotRecognized;
     }
@@ -549,16 +549,16 @@ rootDerivationPath:(NSString *)derivationPath
 }
 
 
-+ (NSMutableData*) compressedPublicKey:(EC_KEY *)key
++ (NSMutableData*)compressedPublicKey:(EC_KEY *)key
 {
-    if (!key)
+    if (key == nil)
     {
         return nil;
     }
 
     EC_KEY_set_conv_form(key, POINT_CONVERSION_COMPRESSED);//POINT_CONVERSION_UNCOMPRESSED //POINT_CONVERSION_COMPRESSED
     int length = i2o_ECPublicKey(key, NULL);
-    if (!length)
+    if (length == 0)
     {
         return nil;
     }

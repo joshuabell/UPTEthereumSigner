@@ -75,7 +75,7 @@ NSString *const UPTSignerErrorCodeLevelSigningError = @"-14";
     {
         NSData *hash = [UPTEthSigner keccak256:payloadData];
         NSDictionary *signature = ethereumSignature(key, hash, chainId);
-        if (signature)
+        if (signature != nil)
         {
             result(signature, nil);
         }
@@ -116,16 +116,19 @@ NSString *const UPTSignerErrorCodeLevelSigningError = @"-14";
     if (key)
     {
         NSData *hash = [payload SHA256];
-        NSData *signature = simpleSignature(key, hash);
-        if (signature)
+
+        NSDictionary *signature = ethereumSignature(key, hash, NULL);
+        if (signature != nil)
         {
-            result(signature, nil);
+            result(@{ @"r" : signature[@"r"], @"s" : signature[@"s"], @"v" : @([signature[@"v"] intValue] - 27) }, nil);
         }
         else
         {
+            NSDictionary *userInfo = @{ @"message" : [NSString stringWithFormat:@"signing failed due to invalid signature components for eth address: signJwt %@",
+                                                  ethAddress] };
             NSError *signingError = [[NSError alloc] initWithDomain:@"UPTError"
                                                                code:UPTSignerErrorCodeLevelSigningError.integerValue
-                                                           userInfo:@{ @"message" : [NSString stringWithFormat:@"signing failed due to invalid signature components for eth address: signJwt %@", ethAddress] }];
+                                                           userInfo:userInfo];
             result(nil, signingError);
         }
     }
@@ -133,7 +136,7 @@ NSString *const UPTSignerErrorCodeLevelSigningError = @"-14";
     {
         NSError *protectionLevelError = [[NSError alloc] initWithDomain:@"UPTError"
                                                                    code:UPTSignerErrorCodeLevelPrivateKeyNotFound.integerValue
-                                                               userInfo:@{@"message": @"private key not found for eth address"}];
+                                                               userInfo:@{ @"message" : @"private key not found for eth address" }];
         result(nil, protectionLevelError);
     }
 }
