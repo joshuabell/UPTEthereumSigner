@@ -116,11 +116,10 @@ NSString *const UPTSignerErrorCodeLevelSigningError = @"-14";
     if (key)
     {
         NSData *hash = [payload SHA256];
-
-        NSDictionary *signature = ethereumSignature(key, hash, NULL);
+        NSDictionary *signature = jwtSignature(key, hash);
         if (signature != nil)
         {
-            result(@{ @"r" : signature[@"r"], @"s" : signature[@"s"], @"v" : @([signature[@"v"] intValue] - 27) }, nil);
+            result(@{ @"r" : signature[@"r"], @"s" : signature[@"s"], @"v" : @([signature[@"v"] intValue]) }, nil);
         }
         else
         {

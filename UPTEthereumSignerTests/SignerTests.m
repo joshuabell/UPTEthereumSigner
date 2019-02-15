@@ -249,6 +249,7 @@
                         XCTAssertTrue([signature[@"r"] isEqualToString:kp[@"txsig"][@"r"]]);
                         XCTAssertTrue([signature[@"s"] isEqualToString:kp[@"txsig"][@"s"]]);
                         XCTAssertEqual([signature[@"v"] intValue], [kp[@"txsig"][@"v"] intValue]);
+                        
                         [UPTEthSigner signJwt:kp[@"address"]
                                    userPrompt:@"test signing data"
                                          data:jwtData
